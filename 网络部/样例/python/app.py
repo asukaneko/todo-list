@@ -21,7 +21,14 @@ def now_ts() -> int:
     return int(datetime.now().timestamp())
 
 def next_id() -> int:
-    return max([t["id"] for t in TodoTable.all()], default=0) + 1
+    ids = sorted([t["id"] for t in TodoTable.all()])
+    expected_id = 1
+    for id in ids:
+        if id == expected_id:
+            expected_id += 1
+        elif id > expected_id:
+            break
+    return expected_id
 
 def ok(message="ok", **kwargs):
     return jsonify({"code": 200, "message": message, **kwargs})
