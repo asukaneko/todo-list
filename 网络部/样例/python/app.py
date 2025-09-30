@@ -59,13 +59,16 @@ def list_todos():
     todos = TodoTable.all()
     return ok("ok", todos_list=todos)
 
-# ---------- 2. 新增一个待办（multipart/form-data） ----------
+# ---------- 2. 新增一个待办（JSON格式） ----------
 @app.post("/todos")
 def add_todo():
-    # 手动解析 multipart，兼容 OpenAPI
-    title = request.form.get("title", "").strip()
+    if not request.json or 'title' not in request.json:
+        return fail("请求体中缺少title字段")
+    
+    title = request.json.get("title", "").strip()
     if not title:
         return fail("title 不能为空")
+    
     todo = {
         "id": next_id(),
         "title": title,
@@ -120,4 +123,4 @@ def update_title(todo_id: int, body: TodoUpdateTitleBody):
 if __name__ == "__main__":
     if not os.path.exists(DB_FILE):
         db.truncate()
-    app.run(debug=True, host='0.0.0.0', port=3000)  
+    app.run(debug=True, host='0.0.0.0', port=3000)
