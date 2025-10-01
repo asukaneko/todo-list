@@ -45,8 +45,8 @@ q = Query()
 def now_ts() -> int:
     return int(datetime.now().timestamp())
 
-def next_id() -> int:
-    ids = sorted([t["id"] for t in TodoTable.all()])
+def next_id(username: str) -> int:
+    ids = sorted([t["id"] for t in TodoTable.all() if t["username"] == username])
     expected_id = 1
     for id in ids:
         if id == expected_id:
@@ -146,7 +146,7 @@ def add_todo():
     if not title:
         return fail("title 不能为空")
     todo = {
-        "id": next_id(),
+        "id": next_id(current_user),
         "username": current_user,  
         "title": title,
         "completed": False,
@@ -204,4 +204,4 @@ def update_title(todo_id: int, body: TodoUpdateTitleBody):
 if __name__ == "__main__":
     if not os.path.exists(DB_FILE):
         db.truncate()
-    app.run(debug=True, host='0.0.0.0', port=3001)  
+    app.run(debug=False, host='0.0.0.0', port=3001)  
