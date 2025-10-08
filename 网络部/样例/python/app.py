@@ -139,4 +139,4 @@ def get_todo_list():
 if __name__ == "__main__":
     if not os.path.exists(DB_FILE):
         db.truncate()
-    app.run(debug=True, host='0.0.0.0', port=3000)
+    app.run(debug=False, host='0.0.0.0', port=3000)
