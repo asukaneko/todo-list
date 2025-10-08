@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_from_directory
 from flask_pydantic import validate
 from pydantic import BaseModel, Field
 from tinydb import TinyDB, Query
@@ -53,14 +53,26 @@ class TodoUpdateStatusBody(BaseModel):
 class TodoUpdateTitleBody(BaseModel):
     title: str = Field(..., min_length=1)
 
+# 修改静态文件路由配置
+@app.route('/assets/<path:filename>')
+def serve_assets(filename):
+    "提供assets目录下的静态文件"
+    assets_dir = os.path.join(os.path.dirname(__file__), 'assets')
+    return send_from_directory(assets_dir, filename)
+
+@app.route('/')
+def index():
+    "提供首页"
+    return send_from_directory(os.path.dirname(__file__), "index.html")
+
 # ---------- 1. 获取所有待办 ----------
-@app.get("/todos")
+@app.get("/api/todos")
 def list_todos():
     todos = TodoTable.all()
     return ok("ok", todos_list=todos)
 
 # ---------- 2. 新增一个待办（JSON格式） ----------
-@app.post("/todos")
+@app.post("/api/todos")
 def add_todo():
     if not request.json or 'title' not in request.json:
         return fail("请求体中缺少title字段")
@@ -80,7 +92,7 @@ def add_todo():
     return ok("Created", data=todo) 
 
 # ---------- 3. 获取单个待办 ----------
-@app.get("/todos/<int:todo_id>")
+@app.get("/api/todos/<int:todo_id>")
 def get_todo(todo_id: int):
     todo = TodoTable.get(q.id == todo_id)
     if not todo:
@@ -88,7 +100,7 @@ def get_todo(todo_id: int):
     return ok("ok", data=todo)
 
 # ---------- 4. 删除指定待办 ----------
-@app.delete("/todos/<int:todo_id>")
+@app.delete("/api/todos/<int:todo_id>")
 def delete_todo(todo_id: int):
     if not TodoTable.contains(q.id == todo_id):
         return fail() 
@@ -96,7 +108,7 @@ def delete_todo(todo_id: int):
     return ok("ok")
 
 # ---------- 5. 更新完成状态 ----------
-@app.put("/todos/<int:todo_id>/status")
+@app.put("/api/todos/<int:todo_id>/status")
 @validate(body=TodoUpdateStatusBody)
 def update_status(todo_id: int, body: TodoUpdateStatusBody):
     todo = TodoTable.get(q.id == todo_id)
@@ -108,7 +120,7 @@ def update_status(todo_id: int, body: TodoUpdateStatusBody):
     return ok("Updated", data=todo)  
 
 # ---------- 6. 更新标题 ----------
-@app.put("/todos/<int:todo_id>/title")
+@app.put("/api/todos/<int:todo_id>/title")
 @validate(body=TodoUpdateTitleBody)
 def update_title(todo_id: int, body: TodoUpdateTitleBody):
     todo = TodoTable.get(q.id == todo_id)
@@ -118,6 +130,10 @@ def update_title(todo_id: int, body: TodoUpdateTitleBody):
     todo["updated_at"] = now_ts()
     TodoTable.update(todo, q.id == todo_id)
     return ok("Updated", data=todo)  
+
+@app.get("/todoList")
+def get_todo_list():
+    return send_from_directory(os.path.dirname(__file__), "index.html")
 
 # ---------- 启动 ----------
 if __name__ == "__main__":
