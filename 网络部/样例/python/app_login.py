@@ -3,12 +3,13 @@ from flask_pydantic import validate
 from pydantic import BaseModel, Field
 from tinydb import TinyDB, Query
 from datetime import datetime
-import os
-import bcrypt
+import bcrypt,os
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 
 app = Flask(__name__)
 app.config['JWT_SECRET_KEY'] = 'your-secret-key-change-this-in-production'
+app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=2)  # 访问token过期时间
+app.config['JWT_REFRESH_TOKEN_EXPIRES'] = timedelta(days=7)  # 刷新token过期时间
 jwt = JWTManager(app)
 CORS = lambda app: app  
 from flask_cors import CORS
